@@ -22,7 +22,7 @@
 
         /* the style of the layer control menu */
         #menu {
-            background: #fff;
+            background: #e1e893;
             position: absolute;
             z-index: 1;
             top: 10px;
@@ -36,7 +36,7 @@
         /* each layer on the menu */
         #menu a {
             font-size: 13px;
-            color: #404040;
+            color: #0d1011;
             display: block;
             margin: 0;
             padding: 0;
@@ -58,13 +58,56 @@
         }
 
         #menu a.active {
-            background-color: #3887be;
+            background-color: #9c7905;
             color: #ffffff;
         }
 
         #menu a.active:hover {
-            background: #3074a4;
+            background: #c79b09;
         }
+        .map-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            background: #9c7905;
+            border-style: solid;
+            border-width: 2px;
+            border-color: rgba(0, 0, 0, 0.2);
+            margin-left: 20px;
+            font-family: Arial, sans-serif;
+            overflow: auto;
+            border-radius: 3px;
+            height: 80px;
+            margin-top: 20px;
+            width: 475px;
+        }
+
+        #title {
+            position: fixed;
+            top: 0;
+            left: 0;
+            margin-top: 10px;
+            margin-left: 60px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 25pt;
+            color: rgba(236, 235, 230, 0.911);
+            padding: 20px
+        }
+
+        #notes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            margin-top: 60px;
+            margin-left: 60px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 10pt;
+            color: rgba(236, 235, 230, 0.911);
+            padding: 20px
+        }
+
+
+
     </style>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.js"></script>
 </head>
@@ -72,6 +115,14 @@
 <body>
     <nav id="menu"></nav>
     <div id='map'></div>
+    <div class='map-overlay' id='title'>
+        Natural Hazards in Los Angeles
+    </div>
+    <div id='notes'>
+        Source for faults data: <a href = "https://geohub.lacity.org/datasets/lacounty::fault-zones/explore?location=33.985193%2C-118.105343%2C10.00"> City of Los Angeles GeoHub: Fault Zones</a><br>
+        Source for fire data: <a href = "https://geohub.lacity.org/datasets/lacounty::lacofd-fire-hazard-severity-zones-lra-feature-layer/explore?location=33.789315%2C-118.127681%2C9.77"> City of Los Angeles GeoHub: Fire Hazard Severity Zones</a>
+    </div>
+
     <script type="text/javascript">
         mapboxgl.accessToken =
             'pk.eyJ1Ijoic2FyYWhnNyIsImEiOiJjbDJsamMwN20wMTZiM3BxbGJocnFjNXhlIn0.O1PUu8eA4fQ-ZqHVleBs6g';
@@ -79,12 +130,12 @@
             container: 'map', // container ID
             style: 'mapbox://styles/mapbox/light-v10',
             zoom: 9, // starting zoom
-            center: [-118.2437, 34.0522] // starting center
+            center: [-118.2437, 33.7] // starting center
         });
 
         map.on('load', () => { //simplifying the function statement: arrow with brackets to define a function
 
-            map.addSource('base-tiles', {
+            map.addSource('Base-tiles', {
                 'type': 'raster',
                 'tiles': [
                     'tiles/tilebase/{z}/{x}/{y}.png'
@@ -92,15 +143,15 @@
                 'tileSize': 256,
             });
 
-            map.addSource('faults-tiles', {
+            map.addSource('Faults-tiles', {
                 'type': 'raster',
                 'tiles': [
-                    'tiles/tilefaults/{z}/{x}/{y}.png'
+                    'tiles/tilefault/{z}/{x}/{y}.png'
                 ],
                 'tileSize': 256,
             });
 
-            map.addSource('basefaults-tiles', {
+            map.addSource('Base with faults-tiles', {
                 'type': 'raster',
                 'tiles': [
                     'tiles/tilebasefaults/{z}/{x}/{y}.png'
@@ -108,7 +159,7 @@
                 'tileSize': 256,
             });
 
-            map.addSource('dry-tiles', {
+            map.addSource('Dry-tiles', {
                 'type': 'raster',
                 'tiles': [
                     'tiles/tiledrytheme/{z}/{x}/{y}.png'
@@ -117,44 +168,55 @@
             });
 
             map.addLayer({
-                'id': 'base',
+                'id': 'Base',
                 'type': 'raster',
                 'layout': {
                     'visibility': 'none'
                 },
-                'source': 'base-tiles'
+                'source': 'Base-tiles'
             });
 
             map.addLayer({
-                'id': 'faults',
+                'id': 'Faults',
                 'type': 'raster',
                 'layout': {
                     'visibility': 'none'
                 },
-                'source': 'faults-tiles'
+                'source': 'Faults-tiles'
             });
 
             map.addLayer({
-                'id': 'dry',
+                'id': 'Base with faults',
                 'type': 'raster',
                 'layout': {
                     'visibility': 'none'
                 },
-                'source': 'dry-tiles'
+                'source': 'Base with faults-tiles'
+            });
+
+            map.addLayer({
+                'id': 'Dry',
+                'type': 'raster',
+                'layout': {
+                    'visibility': 'none'
+                },
+                'source': 'Dry-tiles'
             });
 
         });
 
+        var nav = new mapboxgl.NavigationControl();
+        map.addControl(nav, 'top-left');
 
         // After the last frame rendered before the map enters an "idle" state.
         map.on('idle', () => {
             // If these two layers were not added to the map, abort
-            if (!map.getLayer('base') || !map.getLayer('faults') || !map.getLayer('dry')) {
+            if (!map.getLayer('Base') || !map.getLayer('Faults') || !map.getLayer('Dry') || !map.getLayer('Base with faults')) {
                 return;
             }
 
             // Enumerate ids of the layers.
-            const toggleableLayerIds = ['base', 'faults','dry'];
+            const toggleableLayerIds = ['Base', 'Faults','Base with faults','Dry'];
 
             // Set up the corresponding toggle button for each layer.
             for (const id of toggleableLayerIds) {
